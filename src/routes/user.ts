@@ -1,7 +1,9 @@
 import express, { Request, Response, Router } from "express"
 import { PrismaClient } from '.prisma/client'
 import { prisma, User } from "@prisma/client";
+
 import { read } from "fs";
+import bcrypt from "bcrypt"
 
 const {user} = new PrismaClient()
 const userRouter : express.Router = express.Router()
@@ -66,10 +68,11 @@ userRouter.post("/join", async (req:Request,res:Response) =>{
             msg: "user already exists"
         })
     }
+    const encryptedPassowrd = bcrypt.hashSync(password, 10)
 
     const newUser = await user.create({
         data : {
-            password,
+            password:encryptedPassowrd,
             email,
             name
         }
@@ -97,13 +100,14 @@ userRouter.post("/update", async (req:Request,res:Response) =>{
             msg: "user doesn't exit"
         })
     }
-    if(userExist.password==password){
+    const encryptedPassowrd = bcrypt.hashSync(password, 10)
+    if(bcrypt.compareSync(password,userExist.password)){
         const updateUser = await user.update({
             where:{
                 email
             },
             data:{
-                password: newPassword,
+                password: encryptedPassowrd,
                 name: newName
             }
         })
@@ -138,7 +142,7 @@ userRouter.post("/unroll", async (req:Request, res:Response)=>{
             msg: "user doesn't exist"
         })
     }
-    if(userExist.password==password){
+    if(bcrypt.compareSync(password,userExist.password)){
         const deleteUser = await user.delete({
             where : {
                 email
