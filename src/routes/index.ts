@@ -6,7 +6,7 @@ import acct from "./acct"
 const routes = Router()
 
 routes.use("/auth", auth)
-routes.use("/api/user", user)
+routes.use("/user", user)
 routes.use("/acct",acct)
 
 export default routes

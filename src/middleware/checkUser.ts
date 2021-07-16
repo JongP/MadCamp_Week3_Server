@@ -1,17 +1,20 @@
 import {Request, Response, NextFunction} from "express"
 import { PrismaClient } from '.prisma/client'
+import * as jwt from "jsonwebtoken";
+import config from "../config/config";
 
 const {user} = new PrismaClient()
 
 
 
 export const checkUser = async (req: Request, res: Response, next: NextFunction)  => {
+    const token = <string>req.headers["authorization"];
+    let jwtPayload =<any>jwt.verify(token, config.jwtSecret);
+    const {userId} = jwtPayload;
 
-  const {userId} = req.params
-
-  const userExist = await user.findUnique({
+    const userExist = await user.findUnique({
     where: {
-        id: parseInt(userId)
+        id: +userId
     },
     select :{
         email:true
@@ -23,7 +26,7 @@ if(userExist){
 }else{
     res.json({
       ok:false,
-      error: "wrong userId in middle ware"
+      error: "wrong userId."
     })
 }
 };

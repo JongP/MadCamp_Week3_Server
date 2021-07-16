@@ -32,7 +32,6 @@ model Account {
   transactionsSub Transaction[] @relation(name: "TransSubAcct")//??
 
   @@unique([name,userId], name: "acctIdx")
-
 }
 
 model Transaction {

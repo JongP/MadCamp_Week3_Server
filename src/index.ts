@@ -18,7 +18,7 @@ app.use(bodyParser.urlencoded({
 app.set('port', process.env.PORT || 80);
 
 app.get('/',(req:Request,res:Response ,next:NextFunction)=>{
-    res.send('Hello')
+    res.send('Hello, Bank')
 })
 
 

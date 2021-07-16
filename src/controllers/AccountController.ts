@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import * as jwt from "jsonwebtoken";
 import config from "../config/config";
 import { PrismaClient } from '.prisma/client'
-import { parse } from "path/posix";
+
 
 const {user,account} = new PrismaClient()
 
@@ -10,12 +10,14 @@ class AccountController {
     static createAccount = async (req: Request, res: Response) => {
         console.log("acct/create/:userId")
         let {name, type} = req.body
-        let {userId}  = req.params
+        const token = <string>req.headers["authorization"];
+        let jwtPayload =<any>jwt.verify(token, config.jwtSecret);
+        const {userId} = jwtPayload;
 
         if (!(name && type)) {
           res.json({
             ok: false,
-            error: "null parameter",
+            error: "null parameter error",
           })
           return
         }
@@ -46,8 +48,7 @@ class AccountController {
 
     static deleteAccount = async (req: Request, res: Response) => {
         console.log("acct/delete/:userId")
-        let {accountId} = req.body
-        let {userId}  = req.params
+        let {accountId} = req.params
 
         if (!accountId) {
           res.json({
@@ -77,7 +78,9 @@ class AccountController {
     }
     
     static getAllAccount = async (req: Request, res: Response) => {
-        const{ userId} = req.params
+        const token = <string>req.headers["authorization"];
+        let jwtPayload =<any>jwt.verify(token, config.jwtSecret);
+        const {userId} = jwtPayload;
 
         const accounts = await account.findMany({
             where :{
