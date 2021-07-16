@@ -14,7 +14,11 @@ class AuthController {
 
     let { email, password } = req.body;
     if (!(email && password)) {
-      res.status(400).send();
+      res.json({
+        ok: false,
+        error: "email or password is null"
+      })
+      return
     }
     
     //Get user from database 
@@ -31,27 +35,34 @@ class AuthController {
     })
     
     if(!userExist){
-        return res.status(400).json({
-            msg: "user doesn't exit"
+        return res.json({
+            ok: false,
+            error: "user doesn't exit"
         })
     }
 
     //Check if encrypted password match
     if (!bcrypt.compareSync(password,userExist.password)) {
-      res.status(401).send();
+      res.json({
+        ok:false,
+        error:"incorrect password"
+      });
       console.log("password no match")
       return;
     }
 
     //Sing JWT, valid for 1 hour
     const token = jwt.sign(
-      { userEmail: userExist.email, name: userExist.name },
-      config.jwtSecret,
-      { expiresIn: "1h" }
+      { userId: userExist.id},
+      config.jwtSecret//,
+      //{ expiresIn: "1h" }
     );
 
     //Send the jwt in the response
-    res.send(token);
+    res.json({
+      ok: true,
+      token: token
+    });
   };
 
   static changePassword = async (req: Request, res: Response) => {
@@ -63,7 +74,11 @@ class AuthController {
     //Get parameters from the body
     const { oldPassword, newPassword } = req.body;
     if (!(oldPassword && newPassword)) {
-      res.status(400).send();
+      res.json({
+        ok:false,
+        error: "old or newpassword is null"
+      })
+      return
     }
 
     //Get user from the database
@@ -83,13 +98,19 @@ class AuthController {
 
     if (!userExist) {
         console.log("user doesnt exist")
-        return res.status(400).send()
+        return res.json({
+          ok:false,
+          error:"user doesn't exit"
+        })
     }
 
     //Check if old password matchs
     const encryptedPassowrd = bcrypt.hashSync(newPassword, 10)
     if (!bcrypt.compareSync(oldPassword, userExist.password)) {
-      res.status(401).send();
+      res.json({
+        ok:false,
+        error: "incorrect password"
+      });
     }else{
         const updateUser = await user.update({
             where:{
@@ -99,7 +120,9 @@ class AuthController {
                 password: encryptedPassowrd,
             }
         })
-        res.status(200).json(updateUser)        
+        res.json({
+          ok:true
+        })       
     }
 
   };
