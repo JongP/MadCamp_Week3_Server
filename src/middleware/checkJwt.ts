@@ -20,6 +20,18 @@ export const checkJwt = (req: Request, res: Response, next: NextFunction) => {
     return;
   }
 
+  const {userId} = req.params
+  const  userIdJwt = jwtPayload.userId;
+  console.log(userId);console.log(userIdJwt);
+  if( userId &&(userId!=userIdJwt)){
+    res.json({
+      ok:false,
+      error: "userId in params and jwt differs"
+    })
+  }else{
+    next();
+  }
+
   //The token is valid for 1 hour
   //We want to send a new token on every request
   /*const { userId } = jwtPayload;
@@ -29,6 +41,4 @@ export const checkJwt = (req: Request, res: Response, next: NextFunction) => {
   res.setHeader(
     "token", newToken);*/
 
-  //Call the next middleware or controller
-  next();
 };
