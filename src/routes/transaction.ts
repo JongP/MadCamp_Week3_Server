@@ -9,4 +9,5 @@ const router = Router();
 
 router.post("/income/:accountId",[checkJwt,checkUser,checkUserOwnAccount],TransactionController.income)
 router.post("/expenditure/:accountId",[checkJwt,checkUser,checkUserOwnAccount],TransactionController.expenditure)
+router.post("/send/:accountId",[checkJwt,checkUser,checkUserOwnAccount],TransactionController.send)
 export default router;
