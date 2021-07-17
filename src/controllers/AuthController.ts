@@ -67,9 +67,19 @@ class AuthController {
 
   static changePassword = async (req: Request, res: Response) => {
     //Get ID from JWT
-    const email = res.locals.jwtPayload.userEmail;
-    console.log("changePassword Start")
-    console.log(email)
+    const token = <string>req.headers["authorization"];
+    let jwtPayload;
+    try {
+      jwtPayload = <any>jwt.verify(token, config.jwtSecret);
+    } catch (error) {
+      res.status(200).json({
+        ok: false,
+        error: "invalid token"
+      });
+      return;
+    }//do I need this?
+    const { userId } = jwtPayload
+    
 
     //Get parameters from the body
     const { oldPassword, newPassword } = req.body;
@@ -85,7 +95,7 @@ class AuthController {
     
     const userExist = await user.findUnique({
             where: {
-                email
+                id:userId
             },
             select :{
             email:true,
@@ -114,7 +124,7 @@ class AuthController {
     }else{
         const updateUser = await user.update({
             where:{
-                email
+                id:userId
             },
             data:{
                 password: encryptedPassowrd,

@@ -13,8 +13,8 @@ router.post("/expenditure/:accountId",[checkJwt,checkUser,checkUserOwnAccount],T
 
 router.post("/send/:accountId",[checkJwt,checkUser,checkUserOwnAccount],TransactionController.send)
 
-router.post("/history",[checkJwt,checkUser],TransactionController.historyByMonth)
+router.get("/history",[checkJwt,checkUser],TransactionController.historyByMonth)
 
-router.post("/historyByCategory",[checkJwt,checkUser],TransactionController.historyGroupByCategory)
+router.get("/historyByCategory",[checkJwt,checkUser],TransactionController.historyGroupByCategory)
 
 export default router;

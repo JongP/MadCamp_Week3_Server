@@ -4,7 +4,6 @@ import UserController from "../controllers/UserController";
 import bcrypt from "bcrypt"
 import { checkJwt } from "../middleware/checkJwt";
 
-
 const {user} = new PrismaClient()
 const userRouter : express.Router = express.Router()
 

@@ -6,8 +6,11 @@ import http from 'http'
 import routes from './routes'
 import userRouter from './routes/user'
 import authRouter from "./routes/auth"
+import cors from 'cors'
 
 const app:express.Express= express()
+
+app.use(cors())
 
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({

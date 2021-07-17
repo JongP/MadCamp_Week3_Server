@@ -23,7 +23,10 @@ class TransactionController {
         }//do I need this?
         const { userId } = jwtPayload
         const {accountId} = req.params
-        const {amount,categoryId,content} = req.body
+        const {amount,categoryId,content,date} = req.body
+        let createDate : Date
+        if(!date) createDate = new Date()
+        else createDate = new Date(date)
 
         if(!(amount&&categoryId)){
             res.json({
@@ -93,7 +96,8 @@ class TransactionController {
                     category: +categoryId,
                     accountSubId: +accountId,
                     content,
-                    userId: +userId
+                    userId: +userId,
+                    createdAt: createDate
                 }
             })
         }catch(error){
@@ -126,7 +130,7 @@ class TransactionController {
         }//do I need this?
         const { userId } = jwtPayload
         const {accountId} = req.params
-        const {amount,categoryId,content} = req.body
+        const {amount,categoryId,content,date} = req.body
         if(!(amount&&categoryId)){
             res.json({
                 ok:false,
@@ -134,6 +138,10 @@ class TransactionController {
             })
             return
         }
+        let createDate : Date
+        if(!date) createDate = new Date()
+        else createDate = new Date(date)
+
         if(+amount<0){
             res.json({
                 ok:false,
@@ -201,7 +209,8 @@ class TransactionController {
                     category: +categoryId,
                     accountSubId: +accountId,
                     content,
-                    userId: +userId
+                    userId: +userId,
+                    createdAt: createDate
                 }
             })
         }catch(error){
@@ -221,7 +230,7 @@ class TransactionController {
     }
     static send = async (req: Request, res: Response)=>{
         const {accountId} = req.params
-        const {amount,categoryId,accountSubId,content} = req.body
+        const {amount,categoryId,accountSubId,content,date} = req.body
 
         if(!(amount&&categoryId&&accountSubId)){
             res.json({
@@ -230,6 +239,9 @@ class TransactionController {
             })
             return
         }
+        let createDate : Date
+        if(!date) createDate = new Date()
+        else createDate = new Date(date)
 
         if(+amount<0){
             res.json({
@@ -341,7 +353,8 @@ class TransactionController {
                     category: +categoryId,
                     accountSubId: +accountSubId,
                     content,
-                    userId:acct.userId
+                    userId:acct.userId,
+                    createdAt:createDate
                 }
             })
         }catch(error){
@@ -362,7 +375,8 @@ class TransactionController {
                     category: +categoryId,
                     accountSubId: +accountId,
                     content,
-                    userId:acctSub.userId
+                    userId:acctSub.userId,
+                    createdAt: createDate
                 }
             })
         }catch(error){
@@ -467,13 +481,14 @@ class TransactionController {
         }
 
         const getTransactions = await transaction.groupBy({
-            by:["type","category"],
+            by:["category"],
             where:{
                 userId:+userId,
                 createdAt :{
                     gt : new Date(date),
                     lt : new Date(nextDate) //have to check
-                }
+                },
+                type: {notIn: ["RECEIVE","INCOME"]}
             },
             _sum:{
                 amount:true
@@ -485,29 +500,6 @@ class TransactionController {
             } 
 
         })
-
-        /*const getAccounts = await user.findUnique({
-            where:{
-                id : +userId
-            },
-            include:{
-                transactions:{
-                    where:{
-                        createdAt :{
-                            gt : new Date(date)
-                        }
-                    },
-                    select:{
-                        category:true,
-                        amount :true
-                    }
-                }
-            }
-        })
-        if(!getAccounts){
-            res.json({ok:false,error:"wrong userId"})
-            return
-        }*/
         res.json({
             ok:true,
             response: getTransactions
