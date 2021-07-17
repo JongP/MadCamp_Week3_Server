@@ -19,7 +19,7 @@ export const checkUserOwnAccount = async (req: Request, res: Response, next: Nex
             id: +accountId
         },
         select:{
-            id:true
+            userId:true
         }
     })
 
@@ -32,8 +32,8 @@ export const checkUserOwnAccount = async (req: Request, res: Response, next: Nex
         })
         return
     }
-    console.log(acct.id);console.log(+accountId);
-    if(acct.id==+accountId){
+    //console.log(acct.userId);console.log(+accountId);
+    if(acct.userId==userId){
         next()
     }else{
         res.json({

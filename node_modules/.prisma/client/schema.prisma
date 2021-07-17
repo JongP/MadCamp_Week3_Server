@@ -35,6 +35,8 @@ model Account {
   transactionsSub Transaction[] @relation(name: "TransSubAcct")//I dont need this
   version Int @default(0)
 
+
+  @@unique([userId,name])
   @@unique([name,userId], name: "acctIdx")
 }
 
