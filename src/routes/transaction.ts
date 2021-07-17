@@ -8,6 +8,11 @@ const router = Router();
 //Login route
 
 router.post("/income/:accountId",[checkJwt,checkUser,checkUserOwnAccount],TransactionController.income)
+
 router.post("/expenditure/:accountId",[checkJwt,checkUser,checkUserOwnAccount],TransactionController.expenditure)
+
 router.post("/send/:accountId",[checkJwt,checkUser,checkUserOwnAccount],TransactionController.send)
+
+router.post("/history",[checkJwt,checkUser],TransactionController.historyByMonth)
+
 export default router;
