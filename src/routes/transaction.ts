@@ -8,5 +8,5 @@ const router = Router();
 //Login route
 
 router.post("/income/:accountId",[checkJwt,checkUser,checkUserOwnAccount],TransactionController.income)
-
+router.post("/expenditure/:accountId",[checkJwt,checkUser,checkUserOwnAccount],TransactionController.expenditure)
 export default router;
