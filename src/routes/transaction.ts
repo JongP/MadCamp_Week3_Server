@@ -15,4 +15,6 @@ router.post("/send/:accountId",[checkJwt,checkUser,checkUserOwnAccount],Transact
 
 router.post("/history",[checkJwt,checkUser],TransactionController.historyByMonth)
 
+router.post("/historyByCategory",[checkJwt,checkUser],TransactionController.historyGroupByCategory)
+
 export default router;

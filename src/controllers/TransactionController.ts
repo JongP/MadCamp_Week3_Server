@@ -10,6 +10,18 @@ const {user,account,transaction, $transaction} = new PrismaClient()
 
 class TransactionController {
     static income = async (req: Request, res: Response)=>{
+        const token = <string>req.headers["authorization"];
+        let jwtPayload;
+        try {
+          jwtPayload = <any>jwt.verify(token, config.jwtSecret);
+        } catch (error) {
+          res.status(200).json({
+            ok: false,
+            error: "invalid token"
+          });
+          return;
+        }//do I need this?
+        const { userId } = jwtPayload
         const {accountId} = req.params
         const {amount,categoryId,content} = req.body
 
@@ -80,7 +92,8 @@ class TransactionController {
                     amount: +amount,
                     category: +categoryId,
                     accountSubId: +accountId,
-                    content
+                    content,
+                    userId: +userId
                 }
             })
         }catch(error){
@@ -100,6 +113,18 @@ class TransactionController {
     }
 
     static expenditure = async (req: Request, res: Response)=>{
+        const token = <string>req.headers["authorization"];
+        let jwtPayload;
+        try {
+          jwtPayload = <any>jwt.verify(token, config.jwtSecret);
+        } catch (error) {
+          res.status(200).json({
+            ok: false,
+            error: "invalid token"
+          });
+          return;
+        }//do I need this?
+        const { userId } = jwtPayload
         const {accountId} = req.params
         const {amount,categoryId,content} = req.body
         if(!(amount&&categoryId)){
@@ -175,7 +200,8 @@ class TransactionController {
                     amount: +amount,
                     category: +categoryId,
                     accountSubId: +accountId,
-                    content
+                    content,
+                    userId: +userId
                 }
             })
         }catch(error){
@@ -219,7 +245,8 @@ class TransactionController {
             },
             select:{
                 balance:true,
-                version:true
+                version:true,
+                userId:true
             }
         })
         if(!acct){
@@ -236,7 +263,8 @@ class TransactionController {
             },
             select:{
                 balance:true,
-                version:true
+                version:true,
+                userId:true
             }
         })
         if(!acctSub){
@@ -312,7 +340,8 @@ class TransactionController {
                     amount: +amount,
                     category: +categoryId,
                     accountSubId: +accountSubId,
-                    content
+                    content,
+                    userId:acct.userId
                 }
             })
         }catch(error){
@@ -332,7 +361,8 @@ class TransactionController {
                     amount: +amount,
                     category: +categoryId,
                     accountSubId: +accountId,
-                    content
+                    content,
+                    userId:acctSub.userId
                 }
             })
         }catch(error){
@@ -372,58 +402,115 @@ class TransactionController {
         }
 
         const date = year+"-"+month
-        //console.log(date)
+        let nextDate
+        if(month!="12"){
+            nextDate = year+"-"+String((parseInt(String(month))+1))
+        }else{
+            nextDate = String(parseInt(String(year))+1)+"-1"
+        }
+        /*const test = new Date(date);
+        const testNExt = new Date(nextDate)
+        console.log(test)
+        console.log(testNExt)*/
 
         const getAccounts = await user.findUnique({
             where:{
                 id : +userId
             },
             include:{
-                accts : true
+                transactions:{
+                    where:{
+                        createdAt :{
+                            gt : new Date(date),
+                            lt : new Date(nextDate) //have to check
+                        }
+                    }
+                }
             }
         })
         if(!getAccounts){
             res.json({ok:false,error:"wrong userId"})
             return
         }
-
-        let transactions:Transaction[] =[]
-        //console.log(getAccounts.accts)
-
-        for(let i=0;i<getAccounts.accts.length;i++){
-            const getTransactions = await account.findUnique({
-                where:{
-                    id: getAccounts.accts[i].id
-                },
-                include:{
-                    transactions:true
-                }
-            })
-            if(getTransactions){
-                for(let j=0;j<getTransactions.transactions.length;j++){
-                    const getDate = getTransactions.transactions[j].createdAt
-                    //console.log("date starts")
-                    //console.log(getTransactions.transactions[j].createdAt.toString())
-                    //console.log(String(getDate.getFullYear()))
-                    //console.log(String(getDate.getMonth()+1))
-                    //console.log(String(getDate.getUTCFullYear()))
-                    //console.log(String(getDate.getUTCMonth()+1))
-                    if(String(getDate.getFullYear())==year &&String(getDate.getMonth()+1)==month){
-                        //console.log("you r in the condition")
-                        transactions.push(getTransactions.transactions[j])
-                    }
-                }
-                //transactions=transactions.concat(getTransactions.transactions)
-            }
-        }
-        //https://velog.io/@hanameee/배열에-비동기-작업을-실시할-때-알아두면-좋을법한-이야기들
-        //console.log("the result is below")
-        //console.log(transactions)
-
-
         res.json({
             ok:true,
-            response: transactions
+            response: getAccounts.transactions
+        })
+    }
+
+    static historyGroupByCategory = async (req:Request, res: Response)=>{
+        const token = <string>req.headers["authorization"];
+        let jwtPayload;
+        try {
+          jwtPayload = <any>jwt.verify(token, config.jwtSecret);
+        } catch (error) {
+          res.status(200).json({
+            ok: false,
+            error: "invalid token"
+          });
+          return;
+        }//do I need this?
+        const { userId } = jwtPayload
+
+        const {year, month} = req.query
+        if(!(year&&month)){
+            res.json({ok:false,error:"wrong http query"})
+            return
+        }
+
+        const date = year+"-"+month
+        let nextDate
+        if(month!="12"){
+            nextDate = year+"-"+String((parseInt(String(month))+1))
+        }else{
+            nextDate = String(parseInt(String(year))+1)+"-1"
+        }
+
+        const getTransactions = await transaction.groupBy({
+            by:["type","category"],
+            where:{
+                userId:+userId,
+                createdAt :{
+                    gt : new Date(date),
+                    lt : new Date(nextDate) //have to check
+                }
+            },
+            _sum:{
+                amount:true
+            }, 
+            orderBy:{
+                _sum:{
+                    amount:"desc"
+                }
+            } 
+
+        })
+
+        /*const getAccounts = await user.findUnique({
+            where:{
+                id : +userId
+            },
+            include:{
+                transactions:{
+                    where:{
+                        createdAt :{
+                            gt : new Date(date)
+                        }
+                    },
+                    select:{
+                        category:true,
+                        amount :true
+                    }
+                }
+            }
+        })
+        if(!getAccounts){
+            res.json({ok:false,error:"wrong userId"})
+            return
+        }*/
+        res.json({
+            ok:true,
+            response: getTransactions
         })
     }
 }
