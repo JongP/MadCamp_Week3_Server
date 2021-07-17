@@ -448,7 +448,7 @@ class TransactionController {
         }
         res.json({
             ok:true,
-            response: getAccounts.transactions
+            data: getAccounts.transactions
         })
     }
 
@@ -502,7 +502,7 @@ class TransactionController {
         })
         res.json({
             ok:true,
-            response: getTransactions
+            data: getTransactions
         })
     }
 }

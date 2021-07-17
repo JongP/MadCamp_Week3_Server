@@ -47,7 +47,14 @@ class UserController {
         data : {
             password:encryptedPassowrd,
             email,
-            name
+            name,
+            categories:{
+                create:[
+                    {name:"식비"},{name:"생활"},{name:"쇼핑"},{name:"교통"},{name:"의료/건강"},
+                    {name:"문화/건강"},{name:"미분류"},{name:"월급",type:"INCOME"},
+                    {name:"용돈",type:"INCOME"},{name:"기타 수입",type:"INCOME"}
+                ]
+            }
         }
     })
     res.json({ok:true})

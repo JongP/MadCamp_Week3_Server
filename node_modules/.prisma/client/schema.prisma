@@ -57,16 +57,12 @@ model Transaction {
 }
 
 model Category{
-  //id String @default("") @id  //should be combination of userId and categoryNum 
-  //https://stackoverflow.com/questions/53373101/prisma-datamodel-primary-key-as-a-combination-of-two-relational-models
+  id Int @default(autoincrement()) @id
   user User @relation(fields: [userId], references:[id])
   userId Int
-
-  categoryNum Int
   name String
-  balance Int
-
-  @@id([userId, categoryNum])
+  budget Int @default(0)
+  type CategoryType @default(EXPENDITURE)
 
 }
 
@@ -78,6 +74,10 @@ enum AcctType {
 enum TransType {
   SEND @map("SEND")
   RECEIVE @map("RECEIVE")
+  EXPENDITURE @map("EXPENDITURE")
+  INCOME @map("INCOME")
+}
+enum CategoryType {
   EXPENDITURE @map("EXPENDITURE")
   INCOME @map("INCOME")
 }
