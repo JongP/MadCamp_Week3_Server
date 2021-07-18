@@ -17,4 +17,6 @@ router.get("/history",[checkJwt,checkUser],TransactionController.historyByMonth)
 
 router.get("/historyByCategory",[checkJwt,checkUser],TransactionController.historyGroupByCategory)
 
+router.get("/historyByCreatedAt",[checkJwt,checkUser],TransactionController.historyByMonthTest)
+
 export default router;

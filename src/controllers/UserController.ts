@@ -53,8 +53,8 @@ class UserController {
         const createMany = await category.createMany({
             data:[
                 {name:"식비"},{name:"생활"},{name:"쇼핑/뷰티"},{name:"교통"},
-                {name:"의료/건강"},{name:"문화/여가",},{name:"기타"},{name:"월급"},
-                {name:"용돈"},{name:"기타 수입"}
+                {name:"의료/건강"},{name:"문화/여가",},{name:"기타"},{name:"월급",type:"INCOME"},
+                {name:"용돈",type:"INCOME"},{name:"기타 수입",type:"INCOME"}
             ]
         })
     }
