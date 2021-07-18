@@ -3,42 +3,42 @@ import { PrismaClient } from '.prisma/client'
 import * as jwt from "jsonwebtoken";
 import config from "../config/config";
 
-const {account} = new PrismaClient()
+const {transaction} = new PrismaClient()
 
 
 
-export const checkUserOwnAccount = async (req: Request, res: Response, next: NextFunction)  => {
+export const checkUserOwnTrans = async (req: Request, res: Response, next: NextFunction)  => {
     const token = <string>req.headers["authorization"];
     let jwtPayload =<any>jwt.verify(token, config.jwtSecret);
     const {userId} = jwtPayload;
 
-    const {accountId} = req.params;
-    //console.log("target error start")
-    const acct = await account.findUnique({
+    const {transactionId} = req.body;
+    
+    const tran = await transaction.findUnique({
         where :{
-            id: +accountId
+            id: +transactionId
         },
         select:{
             userId:true
         }
     })
 
-    console.log(acct)
+    console.log(tran)
 
-    if(!acct){
+    if(!tran){
         res.json({
             ok: false,
-            error: "no such accountId"
+            error: "no such transaction"
         })
         return
     }
     //console.log(acct.userId);console.log(+accountId);
-    if(acct.userId==userId){
+    if(tran.userId==userId){
         next()
     }else{
         res.json({
             ok: false,
-            error: "account owner is not userId"
+            error: "transaction owner is not userId"
         })
     }
 

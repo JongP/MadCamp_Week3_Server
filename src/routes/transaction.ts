@@ -3,6 +3,7 @@ import TransactionController from "../controllers/TransactionController";
 import { checkJwt } from "../middleware/checkJwt";
 import { checkUser } from "../middleware/checkUser";
 import { checkUserOwnAccount } from "../middleware/checkUserOwnAccount";
+import { checkUserOwnTrans } from "../middleware/checkUserOwnTrans";
 
 const router = Router();
 //Login route
@@ -13,7 +14,9 @@ router.post("/expenditure/:accountId",[checkJwt,checkUser,checkUserOwnAccount],T
 
 router.post("/send/:accountId",[checkJwt,checkUser,checkUserOwnAccount],TransactionController.send)
 
-router.post("/updateOne",[checkJwt,checkUser],TransactionController.updateOneTransaction)
+router.post("/updateOne",[checkJwt,checkUser,checkUserOwnTrans],TransactionController.updateOneTransaction)
+
+router.post("/deleteOne",[checkJwt,checkUser,checkUserOwnTrans],TransactionController.deleteOneTransaction)
 
 router.get("/history",[checkJwt,checkUser],TransactionController.historyByMonth)
 

@@ -396,9 +396,9 @@ class TransactionController {
     }
 
     static updateOneTransaction = async (req:Request,res:Response)=>{
-        const {transId} = req.body
+        const {transactionId} = req.body
         const {amount,content,categoryId,type,createdAt}= req.body
-        if(!transId) {
+        if(!transactionId) {
             res.json({
                 ok:false, error:"null paremeter or no transId"
             })
@@ -407,7 +407,7 @@ class TransactionController {
 
         const transExist = await transaction.findUnique({
             where:{
-                id: +transId
+                id: +transactionId
             }
         })
 
@@ -418,11 +418,14 @@ class TransactionController {
             return
         }
 
-        if(!(amount&&content&&categoryId&&type&&createdAt)){
+        if(!(amount||content||categoryId||type||createdAt)){
             res.json({
                 ok:false, error:"nothing to change"
-            })            
+            })
+            return            
         }
+
+        //have to validate
         let newAmount:number,newContent:string|null,newCategoryId:number,newType:TransType,newCreatedAt:Date
         if(!amount) newAmount=transExist.amount
         else newAmount = +amount
@@ -439,7 +442,7 @@ class TransactionController {
         try{
             const updateTrans = await transaction.update({
                 where:{
-                    id: +transId
+                    id: +transactionId
                 },
                 data:{
                     amount: newAmount,
@@ -452,6 +455,39 @@ class TransactionController {
             })
         }catch(error){
             res.json({ok:false,error:"update failed. check your parameters"})
+            return
+        }
+        res.json({
+            ok:true
+        })
+    }
+
+    static deleteOneTransaction = async (req:Request,res:Response)=>{
+        const {transactionId} = req.body
+        
+        const transExist = await transaction.findUnique({
+            where:{
+                id: +transactionId
+            }
+        })
+
+        if(!transExist) {
+            res.json({
+                ok:false, error:"no such transId"
+            })
+            return
+        }
+
+
+        //userId check
+        try{
+            const updateTrans = await transaction.delete({
+                where:{
+                    id: +transactionId
+                },
+            })
+        }catch(error){
+            res.json({ok:false,error:"delete failed. "})
             return
         }
         res.json({
@@ -496,7 +532,7 @@ class TransactionController {
                 transactions:{
                     where:{
                         createdAt :{
-                            gt : new Date(date),
+                            gte : new Date(date),
                             lt : new Date(nextDate) //have to check
                         }
                     },
@@ -551,7 +587,7 @@ class TransactionController {
             where:{
                 userId:+userId,
                 createdAt :{
-                    gt : new Date(date),
+                    gte : new Date(date),
                     lt : new Date(nextDate) //have to check
                 },
                 type: {notIn: ["RECEIVE","INCOME"]}
@@ -625,7 +661,7 @@ class TransactionController {
                 transactions:{
                     where:{
                         createdAt :{
-                            gt : new Date(date),
+                            gte : new Date(date),
                             lt : new Date(nextDate) //have to check
                         },
                     },
