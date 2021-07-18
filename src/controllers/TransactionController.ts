@@ -395,63 +395,6 @@ class TransactionController {
         })
     }
 
-    static historyByMonth = async (req:Request, res: Response)=>{
-        const token = <string>req.headers["authorization"];
-        let jwtPayload;
-        try {
-          jwtPayload = <any>jwt.verify(token, config.jwtSecret);
-        } catch (error) {
-          res.status(200).json({
-            ok: false,
-            error: "invalid token"
-          });
-          return;
-        }//do I need this?
-        const { userId } = jwtPayload
-
-        const {year, month} = req.query
-        if(!(year&&month)){
-            res.json({ok:false,error:"wrong http query"})
-            return
-        }
-
-        const date = year+"-"+month
-        let nextDate
-        if(month!="12"){
-            nextDate = year+"-"+String((parseInt(String(month))+1))
-        }else{
-            nextDate = String(parseInt(String(year))+1)+"-1"
-        }
-
-
-        const getAccounts = await user.findUnique({
-            where:{
-                id : +userId
-            },
-            include:{
-                transactions:{
-                    where:{
-                        createdAt :{
-                            gt : new Date(date),
-                            lt : new Date(nextDate) //have to check
-                        }
-                    },
-                    orderBy:{
-                        createdAt : "desc"
-                    }
-                }
-            }
-        })
-        if(!getAccounts){
-            res.json({ok:false,error:"wrong userId"})
-            return
-        }
-        res.json({
-            ok:true,
-            data: getAccounts.transactions
-        })
-    }
-    
     static updateOneTransaction = async (req:Request,res:Response)=>{
         const {transId} = req.body
         const {amount,content,categoryId,type,createdAt}= req.body
@@ -515,6 +458,65 @@ class TransactionController {
             ok:true
         })
     }
+
+    static historyByMonth = async (req:Request, res: Response)=>{
+        const token = <string>req.headers["authorization"];
+        let jwtPayload;
+        try {
+          jwtPayload = <any>jwt.verify(token, config.jwtSecret);
+        } catch (error) {
+          res.status(200).json({
+            ok: false,
+            error: "invalid token"
+          });
+          return;
+        }//do I need this?
+        const { userId } = jwtPayload
+
+        const {year, month} = req.query
+        if(!(year&&month)){
+            res.json({ok:false,error:"wrong http query"})
+            return
+        }
+
+        const date = year+"-"+month
+        let nextDate
+        if(month!="12"){
+            nextDate = year+"-"+String((parseInt(String(month))+1))
+        }else{
+            nextDate = String(parseInt(String(year))+1)+"-1"
+        }
+
+
+        const getAccounts = await user.findUnique({
+            where:{
+                id : +userId
+            },
+            include:{
+                transactions:{
+                    where:{
+                        createdAt :{
+                            gt : new Date(date),
+                            lt : new Date(nextDate) //have to check
+                        }
+                    },
+                    orderBy:{
+                        createdAt : "desc"
+                    }
+                }
+            }
+        })
+        if(!getAccounts){
+            res.json({ok:false,error:"wrong userId"})
+            return
+        }
+        res.json({
+            ok:true,
+            data: getAccounts.transactions
+        })
+    }
+    
+
 
     static historyGroupByCategory = async (req:Request, res: Response)=>{
         const token = <string>req.headers["authorization"];
@@ -644,17 +646,21 @@ class TransactionController {
             res.json({ok:false,error:"wrong userId"})
             return
         }
+        //console.log(getAccounts.transactions)
 
         let resultTras:Transaction[][]=[]
         let iterateArray:Transaction[]=[]
         let current_day = 0
         for(let i =0;i<getAccounts.transactions.length;i++){
             const tran = getAccounts.transactions[i]
-            if(tran.createdAt.getDay()!=current_day){
+
+            //console.log(tran.createdAt.getDate())
+            if(tran.createdAt.getDate()!=current_day){
                 if(current_day!=0) resultTras.push(iterateArray)
                 iterateArray=[tran]
-                current_day=tran.createdAt.getDay()
+                current_day= tran.createdAt.getDate()
             }else{
+                
                 iterateArray.push(tran)
             }
         }
