@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import * as jwt from "jsonwebtoken";
 import config from "../config/config";
 import { PrismaClient, Transaction } from '.prisma/client'
-import { AcctType } from "@prisma/client";
+import { AcctType, TransType } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
@@ -451,6 +451,70 @@ class TransactionController {
             data: getAccounts.transactions
         })
     }
+    
+    static updateOneTransaction = async (req:Request,res:Response)=>{
+        const {transId} = req.body
+        const {amount,content,categoryId,type,createdAt}= req.body
+        if(!transId) {
+            res.json({
+                ok:false, error:"null paremeter or no transId"
+            })
+            return
+        }
+
+        const transExist = await transaction.findUnique({
+            where:{
+                id: +transId
+            }
+        })
+
+        if(!transExist) {
+            res.json({
+                ok:false, error:"no such transId"
+            })
+            return
+        }
+
+        if(!(amount&&content&&categoryId&&type&&createdAt)){
+            res.json({
+                ok:false, error:"nothing to change"
+            })            
+        }
+        let newAmount:number,newContent:string|null,newCategoryId:number,newType:TransType,newCreatedAt:Date
+        if(!amount) newAmount=transExist.amount
+        else newAmount = +amount
+        if(!content) newContent = transExist.content
+        else newContent=content
+        if(!categoryId) newCategoryId = transExist.categoryId
+        else newCategoryId = +categoryId
+        if(!type) newType = transExist.type
+        else newType = type
+        if(!createdAt) newCreatedAt = transExist.createdAt
+        else newCreatedAt = new Date(createdAt)    
+
+        //userId check
+        try{
+            const updateTrans = await transaction.update({
+                where:{
+                    id: +transId
+                },
+                data:{
+                    amount: newAmount,
+                    content:newContent,
+                    categoryId: newCategoryId,
+                    type:newType,
+                    createdAt:newCreatedAt
+
+                }
+            })
+        }catch(error){
+            res.json({ok:false,error:"update failed. check your parameters"})
+            return
+        }
+        res.json({
+            ok:true
+        })
+    }
 
     static historyGroupByCategory = async (req:Request, res: Response)=>{
         const token = <string>req.headers["authorization"];
@@ -522,7 +586,7 @@ class TransactionController {
         })
     }
 
-    static historyByMonthTest = async (req:Request, res: Response)=>{
+    static historyGroupByCreatedAt = async (req:Request, res: Response)=>{
         const token = <string>req.headers["authorization"];
         let jwtPayload;
         try {
@@ -561,6 +625,13 @@ class TransactionController {
                         createdAt :{
                             gt : new Date(date),
                             lt : new Date(nextDate) //have to check
+                        },
+                    },
+                    include:{
+                        account:{
+                            select:{
+                                name:true
+                            }
                         }
                     },
                     orderBy:{

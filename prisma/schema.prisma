@@ -42,7 +42,7 @@ model Account {
 
 model Transaction {
   id Int @default(autoincrement()) @id
-  accout Account @relation(name: "TransMainAcct",fields: [accountId], references: [id])
+  account Account @relation(name: "TransMainAcct",fields: [accountId], references: [id])
   accountId Int
   type TransType
   content String?
