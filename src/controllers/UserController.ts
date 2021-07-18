@@ -4,7 +4,7 @@ import config from "../config/config";
 import { PrismaClient } from '.prisma/client'
 import bcrypt from "bcrypt"
 
-const {user} = new PrismaClient()
+const {user,category} = new PrismaClient()
 
 class UserController { 
   static getAll = async (req: Request, res: Response) => {
@@ -43,16 +43,30 @@ class UserController {
     }
     const encryptedPassowrd = bcrypt.hashSync(password, 10)
 
+    const categoryExist = await category.findUnique({
+        where: {
+            id: 1
+        }
+    }) 
+
+    if(!categoryExist){
+        const createMany = await category.createMany({
+            data:[
+                {name:"식비"},{name:"생활"},{name:"쇼핑/뷰티"},{name:"교통"},
+                {name:"의료/건강"},{name:"문화/여가",},{name:"기타"},{name:"월급"},
+                {name:"용돈"},{name:"기타 수입"}
+            ]
+        })
+    }
+
     const newUser = await user.create({
         data : {
             password:encryptedPassowrd,
             email,
             name,
             categories:{
-                create:[
-                    {name:"식비"},{name:"생활"},{name:"쇼핑"},{name:"교통"},{name:"의료/건강"},
-                    {name:"문화/건강"},{name:"미분류"},{name:"월급",type:"INCOME"},
-                    {name:"용돈",type:"INCOME"},{name:"기타 수입",type:"INCOME"}
+                connect:[
+                    {id:1},{id:2},{id:3},{id:4},{id:5},{id:6},{id:7},{id:8},{id:9},{id:10}
                 ]
             }
         }

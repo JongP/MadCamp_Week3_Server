@@ -6,7 +6,7 @@ import { AcctType } from "@prisma/client";
 
 const prisma = new PrismaClient();
 
-const {user,account,transaction, $transaction} = new PrismaClient()
+const {user,account,transaction, category,$transaction} = new PrismaClient()
 
 class TransactionController {
     static income = async (req: Request, res: Response)=>{
@@ -93,7 +93,7 @@ class TransactionController {
                     accountId: +accountId,
                     type: "INCOME",
                     amount: +amount,
-                    category: +categoryId,
+                    categoryId: +categoryId,
                     accountSubId: +accountId,
                     content,
                     userId: +userId,
@@ -206,7 +206,7 @@ class TransactionController {
                     accountId: +accountId,
                     type: "EXPENDITURE",
                     amount: +amount,
-                    category: +categoryId,
+                    categoryId: +categoryId,
                     accountSubId: +accountId,
                     content,
                     userId: +userId,
@@ -350,7 +350,7 @@ class TransactionController {
                     accountId: +accountId,
                     type: "SEND",
                     amount: +amount,
-                    category: +categoryId,
+                    categoryId: +categoryId,
                     accountSubId: +accountSubId,
                     content,
                     userId:acct.userId,
@@ -372,7 +372,7 @@ class TransactionController {
                     accountId: +accountSubId,
                     type: "RECEIVE",
                     amount: +amount,
-                    category: +categoryId,
+                    categoryId: +categoryId,
                     accountSubId: +accountId,
                     content,
                     userId:acctSub.userId,
@@ -481,7 +481,7 @@ class TransactionController {
         }
 
         const getTransactions = await transaction.groupBy({
-            by:["category"],
+            by:["categoryId"],
             where:{
                 userId:+userId,
                 createdAt :{
@@ -492,7 +492,7 @@ class TransactionController {
             },
             _sum:{
                 amount:true
-            }, 
+            },
             orderBy:{
                 _sum:{
                     amount:"desc"
@@ -500,9 +500,25 @@ class TransactionController {
             } 
 
         })
+        let resultTransactions = []
+        for(let i =0 ;i<getTransactions.length;i++){
+            const categoryId = getTransactions[i].categoryId
+            const amount = getTransactions[i]._sum.amount
+            const categoryExist =  await category.findUnique({
+                where:{
+                    id: categoryId
+                },
+                select:{
+                    name:true
+                }
+            })
+            resultTransactions.push({categoryId:categoryId,amount:amount,
+                categoryName: categoryExist?.name})
+        }
+
         res.json({
             ok:true,
-            data: getTransactions
+            data: resultTransactions
         })
     }
 }

@@ -7,11 +7,12 @@ import routes from './routes'
 import userRouter from './routes/user'
 import authRouter from "./routes/auth"
 import cors from 'cors'
+import morgan from 'morgan';
 
 const app:express.Express= express()
 
 app.use(cors())
-
+app.use(morgan('dev'))
 app.use(bodyParser.json())
 app.use(bodyParser.urlencoded({
     extended: true

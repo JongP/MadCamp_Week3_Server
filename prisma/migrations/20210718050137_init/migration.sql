@@ -18,6 +18,7 @@ CREATE TABLE `Account` (
     `userId` INTEGER NOT NULL,
     `version` INTEGER NOT NULL DEFAULT 0,
 
+    UNIQUE INDEX `Account.userId_name_unique`(`userId`, `name`),
     UNIQUE INDEX `acctIdx`(`name`, `userId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -30,7 +31,7 @@ CREATE TABLE `Transaction` (
     `content` VARCHAR(191),
     `createdAt` DATETIME(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3),
     `amount` INTEGER NOT NULL,
-    `category` INTEGER NOT NULL,
+    `categoryId` INTEGER NOT NULL,
     `accountSubId` INTEGER,
     `userId` INTEGER NOT NULL,
 
@@ -42,7 +43,8 @@ CREATE TABLE `Category` (
     `id` INTEGER NOT NULL AUTO_INCREMENT,
     `userId` INTEGER NOT NULL,
     `name` VARCHAR(191) NOT NULL,
-    `balance` INTEGER NOT NULL DEFAULT 0,
+    `budget` INTEGER NOT NULL DEFAULT 0,
+    `type` ENUM('EXPENDITURE', 'INCOME') NOT NULL DEFAULT 'EXPENDITURE',
 
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -52,6 +54,9 @@ ALTER TABLE `Account` ADD FOREIGN KEY (`userId`) REFERENCES `User`(`id`) ON DELE
 
 -- AddForeignKey
 ALTER TABLE `Transaction` ADD FOREIGN KEY (`accountId`) REFERENCES `Account`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `Transaction` ADD FOREIGN KEY (`categoryId`) REFERENCES `Category`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Transaction` ADD FOREIGN KEY (`accountSubId`) REFERENCES `Account`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
