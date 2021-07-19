@@ -23,12 +23,12 @@ class TransactionController {
         }//do I need this?
         const { userId } = jwtPayload
         const {accountId} = req.params
-        const {amount,categoryId,content,date} = req.body
+        const {amount,categoryName,content,date} = req.body
         let createDate : Date
         if(!date) createDate = new Date()
         else createDate = new Date(date)
 
-        if(!(amount&&categoryId)){
+        if(!(amount&&categoryName)){
             res.json({
                 ok:false,
                 error: "null parameter"
@@ -40,6 +40,22 @@ class TransactionController {
             res.json({
                 ok:false,
                 error: "amount should not be below zero"
+            })
+            return
+        }
+
+        const categoryExist = await category.findUnique({
+            where:{
+                name:categoryName
+            },
+            select:{
+                id:true
+            }
+        })
+        if(!categoryExist){
+            res.json({
+                ok:false,
+                error:"no such category"
             })
             return
         }
@@ -93,7 +109,7 @@ class TransactionController {
                     accountId: +accountId,
                     type: "INCOME",
                     amount: +amount,
-                    categoryId: +categoryId,
+                    categoryId: categoryExist.id,
                     accountSubId: +accountId,
                     content,
                     userId: +userId,
@@ -130,8 +146,8 @@ class TransactionController {
         }//do I need this?
         const { userId } = jwtPayload
         const {accountId} = req.params
-        const {amount,categoryId,content,date} = req.body
-        if(!(amount&&categoryId)){
+        const {amount,categoryName,content,date} = req.body
+        if(!(amount&&categoryName)){
             res.json({
                 ok:false,
                 error: "null parameter"
@@ -146,6 +162,22 @@ class TransactionController {
             res.json({
                 ok:false,
                 error: "amount should not be below zero"
+            })
+            return
+        }
+
+        const categoryExist = await category.findUnique({
+            where:{
+                name:categoryName
+            },
+            select:{
+                id:true
+            }
+        })
+        if(!categoryExist){
+            res.json({
+                ok:false,
+                error:"no such category"
             })
             return
         }
@@ -206,7 +238,7 @@ class TransactionController {
                     accountId: +accountId,
                     type: "EXPENDITURE",
                     amount: +amount,
-                    categoryId: +categoryId,
+                    categoryId: categoryExist.id,
                     accountSubId: +accountId,
                     content,
                     userId: +userId,
@@ -230,9 +262,9 @@ class TransactionController {
     }
     static send = async (req: Request, res: Response)=>{
         const {accountId} = req.params
-        const {amount,categoryId,accountSubId,content,date} = req.body
+        const {amount,categoryName,accountSubId,content,date} = req.body
 
-        if(!(amount&&categoryId&&accountSubId)){
+        if(!(amount&&categoryName&&accountSubId)){
             res.json({
                 ok:false,
                 error: "null parameter"
@@ -247,6 +279,22 @@ class TransactionController {
             res.json({
                 ok:false,
                 error: "amount should not be below zero"
+            })
+            return
+        }
+
+        const categoryExist = await category.findUnique({
+            where:{
+                name:categoryName
+            },
+            select:{
+                id:true
+            }
+        })
+        if(!categoryExist){
+            res.json({
+                ok:false,
+                error:"no such category"
             })
             return
         }
@@ -350,7 +398,7 @@ class TransactionController {
                     accountId: +accountId,
                     type: "SEND",
                     amount: +amount,
-                    categoryId: +categoryId,
+                    categoryId: categoryExist.id,
                     accountSubId: +accountSubId,
                     content,
                     userId:acct.userId,
@@ -372,7 +420,7 @@ class TransactionController {
                     accountId: +accountSubId,
                     type: "RECEIVE",
                     amount: +amount,
-                    categoryId: +categoryId,
+                    categoryId: categoryExist.id,
                     accountSubId: +accountId,
                     content,
                     userId:acctSub.userId,
@@ -397,7 +445,7 @@ class TransactionController {
 
     static updateOneTransaction = async (req:Request,res:Response)=>{
         const {transactionId} = req.body
-        const {amount,content,categoryId,type,createdAt}= req.body
+        const {amount,content,categoryName,type,createdAt,accountId}= req.body
         if(!transactionId) {
             res.json({
                 ok:false, error:"null paremeter or no transId"
@@ -418,7 +466,7 @@ class TransactionController {
             return
         }
 
-        if(!(amount||content||categoryId||type||createdAt)){
+        if(!(amount||content||categoryName||type||createdAt||accountId)){
             res.json({
                 ok:false, error:"nothing to change"
             })
@@ -426,17 +474,37 @@ class TransactionController {
         }
 
         //have to validate
-        let newAmount:number,newContent:string|null,newCategoryId:number,newType:TransType,newCreatedAt:Date
+        let newAmount:number,newContent:string|null,newCategoryId:number,newType:TransType,newCreatedAt:Date,newAccountId:number
         if(!amount) newAmount=transExist.amount
         else newAmount = +amount
         if(!content) newContent = transExist.content
         else newContent=content
-        if(!categoryId) newCategoryId = transExist.categoryId
-        else newCategoryId = +categoryId
+        if(!categoryName) {
+            newCategoryId = transExist.categoryId}
+        else {
+            const categoryExist = await category.findUnique({
+                where:{
+                    name:categoryName
+                },
+                select:{
+                    id:true
+                }
+            })
+            if(!categoryExist){
+                res.json({
+                    ok:false, error:"categoryName not found"
+                })
+                return
+            }
+
+            newCategoryId = categoryExist.id
+        }
         if(!type) newType = transExist.type
         else newType = type
         if(!createdAt) newCreatedAt = transExist.createdAt
-        else newCreatedAt = new Date(createdAt)    
+        else newCreatedAt = new Date(createdAt)
+        if(!accountId) newAccountId = transExist.accountId
+        else newAccountId = +accountId     
 
         //userId check
         try{
@@ -449,8 +517,8 @@ class TransactionController {
                     content:newContent,
                     categoryId: newCategoryId,
                     type:newType,
-                    createdAt:newCreatedAt
-
+                    createdAt:newCreatedAt,
+                    accountId:newAccountId
                 }
             })
         }catch(error){
